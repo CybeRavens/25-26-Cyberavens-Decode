@@ -45,26 +45,11 @@ public class tele extends OpMode{
         strafe = gamepad1.left_stick_x * -1;
         turn = gamepad1.right_stick_x * 1;
 
-        ////1 is a place holder rn
         fLeftPow = Range.clip(drive + turn + strafe, -1, 1);
         bLeftPow = Range.clip(drive + turn - strafe, -1, 1);
         fRightPow = Range.clip(drive - turn - strafe, -1, 1);
         bRightPow = Range.clip(drive - turn + strafe, -1, 1);
-/*
-        if (gamepad1.right_trigger > 0.1) {
-            fLeftPow += 1;
-            bLeftPow += 1;
-            fRightPow += 1;
-            bRightPow += 1;
-        }
 
-        if (gamepad1.left_trigger > 0.1) {
-            fLeftPow -= 0.5;
-            bLeftPow -= 0.5;
-            fRightPow -= 0.5;
-            bRightPow -= 0.5;
-        }
-*/
         telemetry.addData("fL", fLeftPow);
         telemetry.addData("fR", fRightPow);
         telemetry.addData("bL", bLeftPow);
