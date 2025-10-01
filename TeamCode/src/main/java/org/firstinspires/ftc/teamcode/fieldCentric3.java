@@ -1,9 +1,3 @@
-/*
-In the init loop this code will lock onto april tag
-When the bot goes forward/backwords the camera will move to lock on it it
- */
-
-
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -11,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
@@ -24,12 +18,14 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import java.util.List;
 
 @TeleOp
-public class fieldCentric2 extends LinearOpMode {
+public class fieldCentric3 extends LinearOpMode {
     DcMotor fL, fR, bL, bR;
     private static final boolean USE_WEBCAM = true;
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
-    private CRServo computer;
+    private Servo computer;
+    public double servoPos = 0; // change to whatever is lowest
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -40,12 +36,13 @@ public class fieldCentric2 extends LinearOpMode {
         bL = hardwareMap.get(DcMotor.class, "lr");
         bR = hardwareMap.get(DcMotor.class, "rr");
 
-        computer = hardwareMap.get(CRServo.class, "computer");
+        computer = hardwareMap.get(Servo.class, "computer"); // <-- changed to Servo
 
         bL.setDirection(DcMotorSimple.Direction.REVERSE);
         fR.setDirection(DcMotorSimple.Direction.FORWARD);
         fL.setDirection(DcMotorSimple.Direction.REVERSE);
         bR.setDirection(DcMotorSimple.Direction.FORWARD);
+
 
         IMU imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
@@ -56,12 +53,16 @@ public class fieldCentric2 extends LinearOpMode {
         while (opModeInInit()) {
             telemetryAprilTag();
             boolean tagSeen = !aprilTag.getDetections().isEmpty();
-            if (tagSeen) {
-                computer.setPower(0.0);
-            } else {
-                computer.setPower(0.05);
+            while (!tagSeen) {
+                tagSeen = !aprilTag.getDetections().isEmpty();
+                servoPos += 0.05;
+                computer.setPosition(servoPos);
+                if (servoPos >= 0.95) {
+                    telemetry.addData("Status", "Not found: breaking");
+                    break;
+                }
             }
-            telemetry.addData("Init Servo State", tagSeen ? "Stopped (Tag Seen)" : "Searching");
+
             telemetry.update();
         }
 
@@ -70,6 +71,7 @@ public class fieldCentric2 extends LinearOpMode {
 
         while (opModeIsActive()) {
             telemetryAprilTag();
+
 
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
@@ -104,21 +106,15 @@ public class fieldCentric2 extends LinearOpMode {
             fR.setPower(frontRightPower);
             bR.setPower(backRightPower);
 
-            boolean tagSeen = !aprilTag.getDetections().isEmpty();
+            computer.setPosition(servoPos);
 
-            if (y > 0.1 && !tagSeen) {
-                computer.setPower(-1.0);
-            } else if (y < -0.1 && !tagSeen) {
-                computer.setPower(1.0);
-            } else {
-                computer.setPower(0.0);
-            }
+            boolean tagSeen = !aprilTag.getDetections().isEmpty();
 
             telemetry.addData("IMU (radians): ", botHeading);
             telemetry.addData("y", y);
             telemetry.addData("x", x);
             telemetry.addData("rx", rx);
-            telemetry.addData("CRServo (computer)", tagSeen ? "Stopped (Tag Seen)" : "Active");
+            telemetry.addData("Servo (computer)", tagSeen ? "Locked (Tag Seen)" : "Searching");
             telemetry.update();
         }
         visionPortal.close();
@@ -148,6 +144,7 @@ public class fieldCentric2 extends LinearOpMode {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                 telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
             }
+            servoPos = (detection.center.y > 240) ? servoPos - 0.05 : servoPos + 0.05;
         }
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
