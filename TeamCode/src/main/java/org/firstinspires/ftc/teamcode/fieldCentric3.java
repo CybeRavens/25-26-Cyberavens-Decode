@@ -24,7 +24,7 @@ public class fieldCentric3 extends LinearOpMode {
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
     private Servo computer;
-    public double servoPos = 0; // change to whatever is lowest
+    public double servoPos = 0.5; // change to whatever is lowest
 
 
     @Override
@@ -53,6 +53,7 @@ public class fieldCentric3 extends LinearOpMode {
         while (opModeInInit()) {
             telemetryAprilTag();
             boolean tagSeen = !aprilTag.getDetections().isEmpty();
+
             while (!tagSeen) {
                 tagSeen = !aprilTag.getDetections().isEmpty();
                 servoPos += 0.05;
@@ -61,6 +62,7 @@ public class fieldCentric3 extends LinearOpMode {
                     telemetry.addData("Status", "Not found: breaking");
                     break;
                 }
+                sleep(500);
             }
 
             telemetry.update();
