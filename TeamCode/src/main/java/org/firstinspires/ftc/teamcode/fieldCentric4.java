@@ -1,5 +1,11 @@
+/*
+this code will use the strafe odo pos to change msJackson serv
+msJackson servo is the bottom servo plugged into port 2 on the controll hub
+ */
+
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,20 +17,23 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import java.lang.Math;
 
 import java.util.List;
 
 @TeleOp
-public class fieldCentric3 extends LinearOpMode {
+public class fieldCentric4 extends LinearOpMode {
     DcMotor fL, fR, bL, bR;
     private static final boolean USE_WEBCAM = true;
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
-    private Servo computer;
+    private Servo computer, msJackson;
     public double servoPos = 0.5; // change to whatever is lowest
+    GoBildaPinpointDriver odo;
 
 
     @Override
@@ -37,12 +46,14 @@ public class fieldCentric3 extends LinearOpMode {
         bR = hardwareMap.get(DcMotor.class, "rr");
 
         computer = hardwareMap.get(Servo.class, "computer"); // <-- changed to Servo
+        msJackson = hardwareMap.get(Servo.class, "msJackson"); // <-- changed to Servo
 
         bL.setDirection(DcMotorSimple.Direction.REVERSE);
         fR.setDirection(DcMotorSimple.Direction.FORWARD);
         fL.setDirection(DcMotorSimple.Direction.REVERSE);
         bR.setDirection(DcMotorSimple.Direction.FORWARD);
 
+        odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         IMU imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
@@ -150,5 +161,38 @@ public class fieldCentric3 extends LinearOpMode {
         telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
         telemetry.addLine("RBE = Range, Bearing & Elevation");
+    }
+
+    private void turnBasedOnXY(double aprilTagCenterX, double aprilTagCenterY) {
+        // need to change
+        double kp = 0.8;
+        double ki = 0.05;
+        double kd = 0.2;
+
+        double integral = 0.0;
+        double prevError = 0.0;
+
+        double phiMin = -90.0;
+        double phiMax = 90.0;
+
+        double thetaMount = 0.0;
+
+        double odoX = odo.getPosX(DistanceUnit.INCH);
+        double odoY = odo.getPosY(DistanceUnit.INCH);
+        double heading = odo.getHeading(AngleUnit.DEGREES);
+
+        //finds turning angle
+        double thetaTagRad = Math.atan2((aprilTagCenterY - odoY), (aprilTagCenterX - odoX));
+        double thetaTagDeg = Math.toDegrees(thetaTagRad);
+
+        double phiDes = (thetaTagDeg - heading);
+        phiDes = wrapAngle(phiDes);
+
+    }
+
+    private double wrapAngle(double angle) {
+        while (angle > 180) angle -= 360;
+        while (angle < 180) angle += 360;
+        return angle;
     }
 }
