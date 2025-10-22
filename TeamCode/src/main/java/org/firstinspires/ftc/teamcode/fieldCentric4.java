@@ -7,55 +7,42 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-
 import java.util.List;
 
 @TeleOp
-public class fieldCentric3 extends LinearOpMode {
-
+public class fieldCentric4 extends LinearOpMode {
     DcMotor fL, fR, bL, bR;
-    double detX, detY;
     private static final boolean USE_WEBCAM = true;
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
+    private Servo computer, msJackson;
     public double servoPos = 0.5;
     GoBildaPinpointDriver odo;
     private double integral = 0.0;
     private double prevError = 0.0;
-    private double aprilTagY = 0;
-    private double aprilTagX = 0;
-
-    private Servo cameraServo, msJackson;
-
-    private final double IMAGE_CENTER_Y = 240;
 
     @Override
     public void runOpMode() throws InterruptedException {
         initAprilTag();
-
         fL = hardwareMap.get(DcMotor.class, "lf");
         fR = hardwareMap.get(DcMotor.class, "rf");
         bL = hardwareMap.get(DcMotor.class, "lr");
         bR = hardwareMap.get(DcMotor.class, "rr");
-
-        cameraServo = hardwareMap.get(Servo.class, "computer");
-        odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        computer = hardwareMap.get(Servo.class, "computer");
         msJackson = hardwareMap.get(Servo.class, "msJackson");
-
         bL.setDirection(DcMotorSimple.Direction.REVERSE);
         fR.setDirection(DcMotorSimple.Direction.FORWARD);
         fL.setDirection(DcMotorSimple.Direction.REVERSE);
         bR.setDirection(DcMotorSimple.Direction.FORWARD);
-
+        odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         IMU imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
@@ -64,6 +51,17 @@ public class fieldCentric3 extends LinearOpMode {
 
         while (opModeInInit()) {
             telemetryAprilTag();
+            boolean tagSeen = !aprilTag.getDetections().isEmpty();
+            while (!tagSeen) {
+                tagSeen = !aprilTag.getDetections().isEmpty();
+                servoPos += 0.010;
+                computer.setPosition(servoPos);
+                if (servoPos >= 0.65) {
+                    telemetry.addData("Status", "Not found: breaking");
+                    break;
+                }
+                sleep(500);
+            }
             telemetry.update();
         }
 
@@ -71,29 +69,24 @@ public class fieldCentric3 extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            if ((detX-detY < 360) && (detX-detY>340)) {
-                turnBasedOnXY();
-            }
+            telemetryAprilTag();
+            computer.setPosition(servoPos);
+
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            y = Math.abs(y) < 0.01 ? 0 : y;
-            x = Math.abs(x) < 0.01 ? 0 : x;
-            rx = Math.abs(rx) < 0.01 ? 0 : rx;
-
-            y = Math.pow(y, 3);
-            x = Math.pow(x, 3);
-            rx = Math.pow(rx, 3);
+            y = Math.abs(y) < 0.01 ? 0 : Math.pow(y, 3);
+            x = Math.abs(x) < 0.01 ? 0 : Math.pow(x, 3);
+            rx = Math.abs(rx) < 0.01 ? 0 : Math.pow(rx, 3);
 
             if (gamepad1.options) imu.resetYaw();
 
-            // field-centric drive
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
             double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-            rotX *= 1.1;
 
+            rotX *= 1.1;
             double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
             double frontLeftPower  = (rotY + rotX + rx) / denominator;
             double backLeftPower   = (rotY - rotX + rx) / denominator;
@@ -104,11 +97,14 @@ public class fieldCentric3 extends LinearOpMode {
             bL.setPower(backLeftPower);
             fR.setPower(frontRightPower);
             bR.setPower(backRightPower);
-
-            telemetryAprilTag();
+            if (!aprilTag.getDetections().isEmpty()) {
+                AprilTagDetection tag = aprilTag.getDetections().get(0);
+                turnBasedOnXY(tag.ftcPose.x, tag.ftcPose.y);
+            }
+            telemetry.addData("IMU (rad):", botHeading);
+            telemetry.addData("Servo (computer)", !aprilTag.getDetections().isEmpty() ? "Locked (Tag Seen)" : "Searching");
             telemetry.update();
         }
-
         visionPortal.close();
     }
 
@@ -124,9 +120,9 @@ public class fieldCentric3 extends LinearOpMode {
     }
 
     private void telemetryAprilTag() {
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        telemetry.addData("# Tags", currentDetections.size());
-        for (AprilTagDetection detection : currentDetections) {
+        List<AprilTagDetection> detections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", detections.size());
+        for (AprilTagDetection detection : detections) {
             if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
                 telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
@@ -135,14 +131,12 @@ public class fieldCentric3 extends LinearOpMode {
             } else {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                 telemetry.addLine(String.format("Center %6.0f %6.0f (pixels)", detection.center.x, detection.center.y));
-                telemetry.addLine(String.format("odo", odo.getPosX(DistanceUnit.INCH), odo.getPosY(DistanceUnit.INCH)));
             }
-            detX = detection.center.x;
-            detY = detection.center.y;
+            servoPos = (detection.center.y > 355) ? servoPos - 0.010 : servoPos + 0.010;
         }
     }
 
-    private void turnBasedOnXY() {
+    private void turnBasedOnXY(double aprilTagX, double aprilTagY) {
         double Kp = 0.8;
         double Ki = 0.05;
         double Kd = 0.2;
@@ -154,7 +148,7 @@ public class fieldCentric3 extends LinearOpMode {
         double odoX = odo.getPosX(DistanceUnit.INCH);
         double odoY = odo.getPosY(DistanceUnit.INCH);
         double heading = odo.getHeading(AngleUnit.DEGREES);
-        double thetaTagRad = Math.atan2(90 - odoY, 240 - odoX);
+        double thetaTagRad = Math.atan2(aprilTagY - odoY, aprilTagX - odoX);
         double thetaTagDeg = Math.toDegrees(thetaTagRad);
         double phiDes = wrapAngle(thetaTagDeg - heading - thetaMount);
         double phiCur = msJackson.getPosition();

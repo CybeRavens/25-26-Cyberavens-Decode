@@ -6,6 +6,7 @@ When the bot goes forward/backwords the camera will move to lock on it it
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,10 +14,12 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -30,6 +33,13 @@ public class fieldCentric2 extends LinearOpMode {
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
     private CRServo computer;
+    private Servo msJackson;
+    public double servoPos = 0.5;
+    GoBildaPinpointDriver odo;
+    private double integral = 0.0;
+    private double prevError = 0.0;
+    private double aprilTagY = 0;
+    private double aprilTagX = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -59,7 +69,7 @@ public class fieldCentric2 extends LinearOpMode {
             if (tagSeen) {
                 computer.setPower(0.0);
             } else {
-                computer.setPower(0.05);
+                computer.setPower(0.04);
             }
             telemetry.addData("Init Servo State", tagSeen ? "Stopped (Tag Seen)" : "Searching");
             telemetry.update();
@@ -153,4 +163,42 @@ public class fieldCentric2 extends LinearOpMode {
         telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
         telemetry.addLine("RBE = Range, Bearing & Elevation");
     }
+    private void turnBasedOnXY(double aprilTagX, double aprilTagY) {
+        double Kp = 0.8;
+        double Ki = 0.05;
+        double Kd = 0.2;
+
+        double phiMin = -90.0;
+        double phiMax = 90.0;
+        double thetaMount = 0.0;
+
+        double odoX = odo.getPosX(DistanceUnit.INCH);
+        double odoY = odo.getPosY(DistanceUnit.INCH);
+        double heading = odo.getHeading(AngleUnit.DEGREES);
+        double thetaTagRad = Math.atan2(aprilTagY - odoY, aprilTagX - odoX);
+        double thetaTagDeg = Math.toDegrees(thetaTagRad);
+        double phiDes = wrapAngle(thetaTagDeg - heading - thetaMount);
+        double phiCur = msJackson.getPosition();
+        double error = wrapAngle(phiDes - phiCur);
+        double dt = 0.02;
+        integral += error * dt;
+        double derivative = (error - prevError) / dt;
+        double u = Kp * error + Ki * integral + Kd * derivative;
+        prevError = error;
+
+        double phiCmd = clamp(phiCur + u, phiMin, phiMax);
+        msJackson.setPosition(phiCmd);
+    }
+
+    private double wrapAngle(double angle) {
+        while (angle > 180) angle -= 360;
+        while (angle < -180) angle += 360;
+        return angle;
+    }
+
+    private double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
 }
+
+
