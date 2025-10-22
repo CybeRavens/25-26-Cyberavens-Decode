@@ -28,7 +28,8 @@ public class fieldCentric4 extends LinearOpMode {
     GoBildaPinpointDriver odo;
     private double integral = 0.0;
     private double prevError = 0.0;
-
+    private double aprilTagY = 0;
+    private double aprilTagX = 0;
     @Override
     public void runOpMode() throws InterruptedException {
         initAprilTag();
@@ -54,7 +55,7 @@ public class fieldCentric4 extends LinearOpMode {
             boolean tagSeen = !aprilTag.getDetections().isEmpty();
             while (!tagSeen) {
                 tagSeen = !aprilTag.getDetections().isEmpty();
-                servoPos += 0.010;
+                servoPos += 0.0003;
                 computer.setPosition(servoPos);
                 if (servoPos >= 0.65) {
                     telemetry.addData("Status", "Not found: breaking");
@@ -70,7 +71,7 @@ public class fieldCentric4 extends LinearOpMode {
 
         while (opModeIsActive()) {
             telemetryAprilTag();
-            computer.setPosition(servoPos);
+            //computer.setPosition(servoPos);
 
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
@@ -99,7 +100,7 @@ public class fieldCentric4 extends LinearOpMode {
             bR.setPower(backRightPower);
             if (!aprilTag.getDetections().isEmpty()) {
                 AprilTagDetection tag = aprilTag.getDetections().get(0);
-                turnBasedOnXY(tag.ftcPose.x, tag.ftcPose.y);
+                turnBasedOnXY(aprilTagX, aprilTagY);
             }
             telemetry.addData("IMU (rad):", botHeading);
             telemetry.addData("Servo (computer)", !aprilTag.getDetections().isEmpty() ? "Locked (Tag Seen)" : "Searching");
@@ -132,7 +133,9 @@ public class fieldCentric4 extends LinearOpMode {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
                 telemetry.addLine(String.format("Center %6.0f %6.0f (pixels)", detection.center.x, detection.center.y));
             }
-            servoPos = (detection.center.y > 355) ? servoPos - 0.010 : servoPos + 0.010;
+            aprilTagY = detection.center.y;
+            aprilTagX = detection.center.x;
+            servoPos = (detection.center.y > 95) ? servoPos - 0.010 : servoPos + 0.010;
         }
     }
 
