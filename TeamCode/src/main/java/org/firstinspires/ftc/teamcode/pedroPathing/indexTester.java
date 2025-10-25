@@ -94,7 +94,7 @@ public class indexTester extends LinearOpMode {
             // --- SERVO CONTROL BASED ON COLOR DETECTED ---
             // Hue range for purple ~236, green ~157
             if (hue > 220 && hue < 250) { // Purple
-                colorServo.setPosition(00.1);// <<< CHANGE THESE VALUES IF NEEDED >>>
+                colorServo.setPosition(0.1);// <<< CHANGE THESE VALUES IF NEEDED >>>
                 telemetry.addData("Detected Color", "Purple");
             } else if (hue > 140 && hue < 170) { // Green
                 colorServo.setPosition(0.9);// <<< CHANGE THESE VALUES IF NEEDED >>>
