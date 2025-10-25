@@ -10,7 +10,7 @@ public class deseasRicky extends LinearOpMode{
 
     @Override public void runOpMode() {
 
-        fL = hardwareMap.get(DcMotor.class, "lf");
+        fL = hardwareMap.get(DcMotor.class, "fly");
 
         waitForStart();
         while (opModeIsActive()) {
