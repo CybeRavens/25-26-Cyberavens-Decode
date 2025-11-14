@@ -1,10 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Math.atan2;
+import static java.lang.Math.exp;
+
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -20,21 +24,27 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.Servo;
+
 
 import java.util.List;
 
 @TeleOp
 public class fieldCentric7 extends LinearOpMode {
     DcMotor fL, fR, bL, bR, fW, iT;
-    NormalizedColorSensor colorSensor;
+    ColorSensor colorSensor;
+
+    int aprilTagID = 21;
 
     private CRServo transferServoGreen, transferServoPurple;
+    public Servo shooterAngleServo, pushServo;
 
     private static final boolean USE_WEBCAM = true;
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
     Follower follower;
     Path goToPoint;
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -45,10 +55,15 @@ public class fieldCentric7 extends LinearOpMode {
         bL = hardwareMap.get(DcMotor.class, "lr");
         bR = hardwareMap.get(DcMotor.class, "rr");
 
-        transferServoGreen = hardwareMap.get(CRServo.class, "transfer_servo");
+        shooterAngleServo = hardwareMap.get(Servo.class, "shooterAngleServo");
+
+        colorSensor = hardwareMap.get(ColorSensor.class, "color");
+        pushServo = hardwareMap.get(Servo.class, "pushServo");
+
+
+        transferServoGreen = hardwareMap.get(CRServo.class, "green");
+
         transferServoPurple = hardwareMap.get(CRServo.class, "purple");
-        transferServoGreen.setDirection(DcMotorSimple.Direction.FORWARD);
-        transferServoPurple.setDirection(DcMotorSimple.Direction.REVERSE);
 
         fW = hardwareMap.get(DcMotor.class, "flyWheel");
         iT = hardwareMap.get(DcMotor.class, "intake");
@@ -70,6 +85,7 @@ public class fieldCentric7 extends LinearOpMode {
 
         waitForStart();
         if (isStopRequested()) return;
+        fW.setPower(0.7);
 
         while (opModeIsActive()) {
 
@@ -117,7 +133,13 @@ public class fieldCentric7 extends LinearOpMode {
                 follower.followPath(goToPoint, true);
             }
 
+            if (gamepad1.b) {
+                intake();
+            }
 
+            if (gamepad1.left_trigger > 0.1) {
+                outtake();
+            }
 
             follower.update();
 
@@ -159,19 +181,86 @@ public class fieldCentric7 extends LinearOpMode {
     }
 
     private void outtake() {
+        // double sinLa = follower.getPose().getX();
+        // double xGoal = (sinLa - 0.0);
+        double xGoalPos = 0.0;
+        double xRobot = follower.getPose().getX();
+        double xGoal = Math.abs(xRobot-xGoalPos);
+        final double G = 9.81;
+        final double V0 = 23;
+        double K = 1;
 
+        double angleRadians = calculateAngle(V0, K, xGoal, G);
+        double angleDegrees = Math.toDegrees(angleRadians);
+        double servoPos = mapAngleToServo(angleDegrees);
+
+        shooterAngleServo.setPosition(servoPos);
+
+        telemetry.addData("xGoal (m)", xGoal);
+        telemetry.addData("Launch Angle (deg)", angleDegrees);
+        telemetry.addData("Servo Pos", servoPos);
+        telemetry.update();
+
+        if (aprilTagID == 21) {
+            fW.setPower(1);
+            transferServoGreen.setPower(1);
+            transferServoGreen.setPower(0);
+            sleep(500);
+            transferServoPurple.setPower(1);
+            sleep(1000);
+            transferServoPurple.setPower(0);
+        }
+        fW.setPower(0.7);
     }
 
     private void intake() {
-        iT.setPower(1);
+        iT.setPower(0.5);
 
+        int red = colorSensor.red();
+        int green = colorSensor.green();
+        int blue = colorSensor.blue();
+        boolean isDetected = false;
+
+        while (!isDetected) {
+            if (green > 200 && green > red && green > blue) {
+                telemetry.addData("Color Detected", "Green");
+                telemetry.update();
+                iT.setPower(0);
+                pushServo.setPosition(0.0);
+                isDetected = true;
+            } else if (red > 150 && blue > 150 && red < 200 && blue < 200 && green < 100) {
+                telemetry.addData("Color Detected", "Purple");
+                telemetry.update();
+                iT.setPower(0);
+                pushServo.setPosition(1.0);
+                isDetected = true;
+            }
+        }
+        iT.setPower(0);
 
     }
 
     private void autoAiming() {
+        System.out.println("jafar");
+    }
 
+
+
+    /// for outake
+    public double calculateAngle(double v0, double k, double x_goal, double g) {
+        double expTerm = exp(-k * x_goal / v0);
+        double bracketTerm = v0 * (1 - expTerm) - (g * v0 / k) * x_goal;
+        return atan2(bracketTerm, x_goal);
+    }
+
+    public double mapAngleToServo(double angleDegrees) {
+        // Example: 0 deg maps to 0.0, 60 deg maps to 1.0 (tune max angle as needed)
+        double minAngle = 40.0;
+        double maxAngle = 80.0; // Max shooter angle your hardware allows
+        double minServo = 0.0;
+        double maxServo = 1.0;
+        return (angleDegrees - minAngle) / (maxAngle - minAngle) * (maxServo - minServo) + minServo;
     }
 
 }
-
 
