@@ -42,7 +42,7 @@ public class tele extends OpMode{
     @Override
     public void loop() {
         drive = gamepad1.left_stick_y * - 1;
-        strafe = gamepad1.left_stick_x * -1;
+        strafe = gamepad1.left_stick_x * 1;
         turn = gamepad1.right_stick_x * 1;
 
         fLeftPow = Range.clip(drive + turn + strafe, -1, 1);
