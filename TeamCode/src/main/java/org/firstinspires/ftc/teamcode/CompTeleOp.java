@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp
 public class CompTeleOp extends LinearOpMode {
-    DcMotor fL, fR, bL, bR;
+    DcMotor fL, fR, bL, bR, roler;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -20,12 +20,12 @@ public class CompTeleOp extends LinearOpMode {
         fR = hardwareMap.get(DcMotor.class, "rf");
         bL = hardwareMap.get(DcMotor.class, "lr");
         bR = hardwareMap.get(DcMotor.class, "rr");
+        roler = hardwareMap.get(DcMotor.class, "roler");
         // Reverse necessary motors
         bL.setDirection(DcMotorSimple.Direction.REVERSE);
         fR.setDirection(DcMotorSimple.Direction.FORWARD);
         fL.setDirection(DcMotorSimple.Direction.REVERSE);
         bR.setDirection(DcMotorSimple.Direction.FORWARD);
-
         Intake intake = new Intake(hardwareMap);
         Outtake outtake = new Outtake(hardwareMap);
         Transfer transfer = new Transfer(hardwareMap);
@@ -76,7 +76,8 @@ public class CompTeleOp extends LinearOpMode {
             bL.setPower(backLeftPower);
             fR.setPower(frontRightPower);
             bR.setPower(backRightPower);
-            Intake.index();
+            //Intake.index();
+            //roler.setPower(1);
 
             if (gamepad1.a) {
                 Intake.run();
