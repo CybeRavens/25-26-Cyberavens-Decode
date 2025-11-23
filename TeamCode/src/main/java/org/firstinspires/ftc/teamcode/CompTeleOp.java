@@ -26,7 +26,6 @@ public class CompTeleOp extends LinearOpMode {
         fR.setDirection(DcMotorSimple.Direction.FORWARD);
         fL.setDirection(DcMotorSimple.Direction.REVERSE);
         bR.setDirection(DcMotorSimple.Direction.FORWARD);
-
         Intake intake = new Intake(hardwareMap);
         Outtake outtake = new Outtake(hardwareMap);
         Transfer transfer = new Transfer(hardwareMap);
@@ -78,7 +77,7 @@ public class CompTeleOp extends LinearOpMode {
             fR.setPower(frontRightPower);
             bR.setPower(backRightPower);
             //Intake.index();
-            roler.setPower(1);
+            //roler.setPower(1);
 
             if (gamepad1.a) {
                 Intake.run();
