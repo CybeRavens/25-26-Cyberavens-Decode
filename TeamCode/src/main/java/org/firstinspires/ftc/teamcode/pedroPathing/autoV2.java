@@ -193,7 +193,6 @@ public class autoV2 extends OpMode {
                     pathState++;
                 }
                 break;
-
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.line3, true);
