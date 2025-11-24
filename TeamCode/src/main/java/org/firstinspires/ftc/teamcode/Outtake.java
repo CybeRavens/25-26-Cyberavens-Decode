@@ -27,4 +27,8 @@ public class Outtake {
         //flyMotor.setVelocity(v);
         flyMotor.setPower(1);
     }
+
+    public static void stop() {
+        flyMotor.setPower(0);
+    }
 }

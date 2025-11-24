@@ -5,6 +5,7 @@ import static java.lang.Math.exp;
 
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -30,6 +31,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import java.util.List;
 
 @TeleOp
+@Disabled
 public class fieldCentric7 extends LinearOpMode {
     DcMotor fL, fR, bL, bR, fW, iT;
     ColorSensor colorSensor;

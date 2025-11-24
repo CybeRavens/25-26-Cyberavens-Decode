@@ -9,25 +9,24 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "testAuto", group = "Autonomous")
+@Autonomous(name = "Path 3 Auto", group = "Autonomous")
 @Configurable // Panels
-@Disabled
-public class testAuto extends OpMode {
+public class AutoV6 extends OpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
     public Follower follower; // Pedro Pathing follower instance
     private int pathState; // Current autonomous path state (state machine)
     private Paths paths; // Paths defined in the Paths class
-    //overrid
+
     @Override
     public void init() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(100.433, 9.0, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(40.168, 123, Math.toRadians(270)));
 
         paths = new Paths(follower); // Build paths
 
@@ -53,30 +52,20 @@ public class testAuto extends OpMode {
         public PathChain Path1;
         public PathChain Path2;
         public PathChain Path3;
+        public PathChain Path4;
+        public PathChain Path5;
+        public PathChain Path6;
+        public PathChain Path7;
+        public PathChain Path8;
+        public PathChain Path9;
 
         public Paths(Follower follower) {
             Path1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(55.500, 8.500), new Pose(72.000, 48.000))
+                            new BezierLine(new Pose(40.168, 125), new Pose(48.354, 95.343))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(135))
-                    .build();
-
-            Path2 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(72.000, 48.000), new Pose(48.000, 72.000))
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
-                    .build();
-
-            Path3 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(48.000, 72.000), new Pose(72.000, 24.000))
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                    .setLinearHeadingInterpolation(Math.toRadians(270), Math.toRadians(120))
                     .build();
         }
     }
@@ -87,23 +76,10 @@ public class testAuto extends OpMode {
                 follower.followPath(paths.Path1, true);
                 pathState++;
                 break;
-
-            case 1:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.Path2, true);
-                    pathState++;
-                }
-                break;
-
-            case 2:
-                if (!follower.isBusy()) {
-                    follower.followPath(paths.Path3, true);
-                    pathState++;
-                }
-                break;
         }
-
+        // Add your state machine Here
+        // Access paths with paths.pathName
+        // Refer to the Pedro Pathing Docs (Auto Example) for an example state machine
         return pathState;
     }
-
 }
