@@ -156,7 +156,7 @@ public class fullTele extends LinearOpMode {
                 pushServo.setPosition(0.2);
                 telemetry.addData("Detected Color", "Green");
             }
-// Detect purple ball (wide range)
+//Detect purple ball (wide range)
             else if (hue >= 210 && hue <= 230) { // wrap-around purple
                 pushServo.setPosition(0.8);
                 telemetry.addData("Detected Color", "Purple");
