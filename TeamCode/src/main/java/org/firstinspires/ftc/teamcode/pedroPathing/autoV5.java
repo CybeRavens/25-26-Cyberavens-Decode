@@ -187,7 +187,7 @@ public class autoV5 extends OpMode {
                     sleep(250);
                     Transfer.nothing();
                     follower.followPath(paths.Path2, true);
-                    Intake.run();
+                    Intake.run(1);
                     pathState++;
                 }
                 break;
@@ -215,7 +215,7 @@ public class autoV5 extends OpMode {
                     Transfer.nothing();
 
                     follower.followPath(paths.Path4, true);
-                    Intake.run();
+                    Intake.run(1);
                     pathState++;
                 }
                 break;
@@ -252,7 +252,7 @@ public class autoV5 extends OpMode {
             case 6:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path7, true);
-                    Intake.run();
+                    Intake.run(1);
                     pathState++;
                 }
                 break;

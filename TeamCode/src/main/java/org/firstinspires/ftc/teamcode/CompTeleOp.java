@@ -79,24 +79,24 @@ public class CompTeleOp extends LinearOpMode {
             //Intake.index();
             //roler.setPower(1);
 
-            if (gamepad1.a) {
-                Intake.run();
+            if (gamepad2.a) {
+                Intake.run(1);
             }
-            if (gamepad1.b) {
+            if (gamepad2.b) {
                 Intake.stop();
             }
-            if (gamepad1.x) {
-                Intake.ejaculate();
+            if (gamepad2.x) {
+                Intake.ejaculate(-1);
             }
 
-            if (gamepad1.left_trigger > 0.1) {
+            if (gamepad2.left_trigger > 0.1) {
                 Transfer.firePurple();
-            } else if (gamepad1.right_trigger > 0.1) {
+            } else if (gamepad2.right_trigger > 0.1) {
                 Transfer.fireGreen();
             } else {
                 Transfer.nothing();
             }
-            if (gamepad1.right_bumper) {
+            if (gamepad2.right_bumper) {
                 Outtake.setVelocity(6900);
             }
 

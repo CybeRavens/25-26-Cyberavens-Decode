@@ -135,13 +135,14 @@ class LocalizationTest extends OpMode {
                 + "allowing robot control through a basic mecanum drive on gamepad 1.");
         telemetryM.update(telemetry);
         follower.update();
-        drawCurrent();
+        //drawCurrent();
     }
 
     @Override
     public void start() {
-        follower.startTeleopDrive();
-        follower.update();
+        //follower.startTeleopDrive();
+        //follower.update();
+        telemetryM.debug("x:" + follower.getPose().getX());
     }
 
     /**
@@ -150,8 +151,8 @@ class LocalizationTest extends OpMode {
      */
     @Override
     public void loop() {
-        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
-        follower.update();
+        //follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
+        //follower.update();
 
         telemetryM.debug("x:" + follower.getPose().getX());
         telemetryM.debug("y:" + follower.getPose().getY());
@@ -159,7 +160,7 @@ class LocalizationTest extends OpMode {
         telemetryM.debug("total heading:" + follower.getTotalHeading());
         telemetryM.update(telemetry);
 
-        drawCurrentAndHistory();
+        //drawCurrentAndHistory();
     }
 }
 
