@@ -9,11 +9,13 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "JafarFromAfar", group = "Autonomous")
 @Configurable // Panels
+@Disabled
 public class autoV3 extends OpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance

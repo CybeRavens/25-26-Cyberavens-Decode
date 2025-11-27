@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static android.os.SystemClock.sleep;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -10,9 +12,13 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+
+import org.firstinspires.ftc.teamcode.Intake;
+import org.firstinspires.ftc.teamcode.Outtake;
+import org.firstinspires.ftc.teamcode.Transfer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous(name = "Pedro Pathing Autonomous - 11/22", group = "Autonomous")
+@Autonomous(name = "Path 1 auto", group = "Autonomous")
 @Configurable // Panels
 public class autoV5 extends OpMode {
 
@@ -20,6 +26,10 @@ public class autoV5 extends OpMode {
     public Follower follower; // Pedro Pathing follower instance
     private int pathState; // Current autonomous path state (state machine)
     private Paths paths; // Paths defined in the Paths class
+    private Intake intake;
+    private Outtake outtake;
+    private Transfer transfer;
+
 
     @Override
     public void init() {
@@ -29,6 +39,10 @@ public class autoV5 extends OpMode {
         follower.setStartingPose(new Pose(40.168, 123, Math.toRadians(270)));
 
         paths = new Paths(follower); // Build paths
+
+        intake = new Intake(hardwareMap);
+        outtake = new Outtake(hardwareMap);
+        transfer = new Transfer(hardwareMap);
 
         panelsTelemetry.debug("Status", "Initialized");
         panelsTelemetry.update(telemetry);
@@ -149,9 +163,13 @@ public class autoV5 extends OpMode {
                     .build();
         }
     }
+        public int autonomousPathUpdate() {
 
-    public int autonomousPathUpdate() {
         switch (pathState) {
+
+            // ------------------------------------------------------
+            // PATH 1 → Go to shooting zone and shoot 3 preloads
+            // ------------------------------------------------------
             case 0:
                 follower.followPath(paths.Path1, true);
                 pathState++;
@@ -159,13 +177,25 @@ public class autoV5 extends OpMode {
 
             case 1:
                 if (!follower.isBusy()) {
+
+                    Outtake.setVelocity(1);
+                    Transfer.fireGreen();
+                    sleep(250);
+                    Transfer.fireGreen();
+                    sleep(250);
+                    Transfer.firePurple();
+                    sleep(250);
+                    Transfer.nothing();
                     follower.followPath(paths.Path2, true);
+                    Intake.run(1);
                     pathState++;
                 }
                 break;
 
+
             case 2:
                 if (!follower.isBusy()) {
+                    Intake.stop();
                     follower.followPath(paths.Path3, true);
                     pathState++;
                 }
@@ -173,13 +203,26 @@ public class autoV5 extends OpMode {
 
             case 3:
                 if (!follower.isBusy()) {
+                    Transfer.fireGreen();
+                    sleep(250);
+
+                    Transfer.fireGreen();
+                    sleep(250);
+
+                    Transfer.firePurple();
+                    sleep(250);
+
+                    Transfer.nothing();
+
                     follower.followPath(paths.Path4, true);
+                    Intake.run(1);
                     pathState++;
                 }
                 break;
 
             case 4:
                 if (!follower.isBusy()) {
+                    Intake.stop();
                     follower.followPath(paths.Path5, true);
                     pathState++;
                 }
@@ -187,6 +230,20 @@ public class autoV5 extends OpMode {
 
             case 5:
                 if (!follower.isBusy()) {
+
+                    // ---- SHOOT 3 BALLS ----
+                    Transfer.fireGreen();
+                    sleep(250);
+
+                    Transfer.fireGreen();
+                    sleep(250);
+
+                    Transfer.firePurple();
+                    sleep(250);
+
+                    Transfer.nothing();
+                    // ------------------------
+
                     follower.followPath(paths.Path6, true);
                     pathState++;
                 }
@@ -195,12 +252,14 @@ public class autoV5 extends OpMode {
             case 6:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path7, true);
+                    Intake.run(1);
                     pathState++;
                 }
                 break;
 
             case 7:
                 if (!follower.isBusy()) {
+                    Intake.stop();
                     follower.followPath(paths.Path8, true);
                     pathState++;
                 }
@@ -208,14 +267,31 @@ public class autoV5 extends OpMode {
 
             case 8:
                 if (!follower.isBusy()) {
+
+                    Transfer.fireGreen();
+                    sleep(250);
+                    Transfer.fireGreen();
+                    sleep(250);
+                    Transfer.firePurple();
+                    sleep(250);
+
+                    Transfer.nothing();
+
                     follower.followPath(paths.Path9, true);
                     pathState++;
                 }
                 break;
+
+            case 9:
+                if (!follower.isBusy()) {
+                    Intake.stop();
+                    Transfer.nothing();
+                    Outtake.stop();
+                    pathState++;
+                }
+                break;
         }
-        // Add your state machine Here
-        // Access paths with paths.pathName
-        // Refer to the Pedro Pathing Docs (Auto Example) for an example state machine
         return pathState;
     }
+
 }

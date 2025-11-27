@@ -18,7 +18,7 @@ public class Transfer {
     }
 
     public static void firePurple() {
-        transferServoPurple.setPower(1);
+        transferServoPurple.setPower(-1);
     }
 
     public static void nothing() {

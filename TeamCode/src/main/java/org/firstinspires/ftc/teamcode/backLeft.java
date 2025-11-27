@@ -4,18 +4,19 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "ANI front left", group = "ANI")
+@TeleOp(name = "ANI backLeft", group = "ANI")
 
-public class deseasRicky extends LinearOpMode{
-    DcMotor fL;
+public class backLeft extends LinearOpMode{
+    Servo fL;
 
     @Override public void runOpMode() {
 
-        fL = hardwareMap.get(DcMotor.class, "lf");
+        fL = hardwareMap.get(Servo.class, "pushServo");
         waitForStart();
         while (opModeIsActive()) {
-            fL.setPower(0.5);
+            fL.setPosition(0.5);
         }
     }
 }

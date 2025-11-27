@@ -5,14 +5,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name = "ANI front left", group = "ANI")
+@TeleOp(name = "ANI frontRight", group = "ANI")
 
-public class deseasRicky extends LinearOpMode{
+public class frontRight extends LinearOpMode{
     DcMotor fL;
 
     @Override public void runOpMode() {
 
-        fL = hardwareMap.get(DcMotor.class, "lf");
+        fL = hardwareMap.get(DcMotor.class, "rf");
         waitForStart();
         while (opModeIsActive()) {
             fL.setPower(0.5);

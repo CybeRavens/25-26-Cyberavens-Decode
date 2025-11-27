@@ -129,9 +129,6 @@ public class fullTele extends LinearOpMode {
                 purple.setPower(0);
             }
 
-            // -------------------------
-            // Manual CR servo override - bumpers / X/Y
-            // -------------------------
             if (gamepad2.left_bumper) green.setPower(1);
             else if (gamepad2.right_bumper) green.setPower(-1);
             else green.setPower(0);
@@ -140,23 +137,19 @@ public class fullTele extends LinearOpMode {
             else if (gamepad2.y) purple.setPower(-1);
             else purple.setPower(0);
 
-            // -------------------------
-            // Push servo using hue-based detection
-            // -------------------------
             int red = color.red();
             int green = color.green();
             int blue = color.blue();
 
             float hsv[] = new float[3];
             android.graphics.Color.RGBToHSV(red, green, blue, hsv);
-            float hue = hsv[0]; // 0-360 degrees
+            float hue = hsv[0];
 
-// Detect green ball (wide range)
             if (hue >= 150 && hue <= 165) {
                 pushServo.setPosition(0.2);
                 telemetry.addData("Detected Color", "Green");
             }
-//Detect purple ball (wide range)
+
             else if (hue >= 210 && hue <= 230) { // wrap-around purple
                 pushServo.setPosition(0.8);
                 telemetry.addData("Detected Color", "Purple");
@@ -169,9 +162,6 @@ public class fullTele extends LinearOpMode {
             telemetry.update();
 
 
-            // -------------------------
-            // Telemetry
-            // -------------------------
 
         }
     }

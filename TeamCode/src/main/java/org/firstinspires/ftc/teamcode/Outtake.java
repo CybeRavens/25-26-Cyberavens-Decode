@@ -23,8 +23,12 @@ public class Outtake {
         shooterAngleServoLeft.setPosition(300/theta);
         shooterAngleServoRight.setPosition(300/(1-theta));
     }
-    public static void setVelocity(int v) {
+    public static void setVelocity(float v) {
         //flyMotor.setVelocity(v);
-        flyMotor.setPower(1);
+        flyMotor.setPower(v);
+    }
+
+    public static void stop() {
+        flyMotor.setPower(0);
     }
 }
