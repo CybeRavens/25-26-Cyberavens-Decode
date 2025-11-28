@@ -8,8 +8,19 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.List;
+
 @TeleOp(name = "Christopher Gallick's TeleOp")
 public class bestPossibleTeleOP extends OpMode {
+    private static final boolean USE_WEBCAM = true;
+    private AprilTagProcessor aprilTag;
+    private VisionPortal visionPortal;
 
     // Drive motors (gamepad1)
     private DcMotor frontLeftDrive, frontRightDrive, backLeftDrive, backRightDrive;
@@ -23,7 +34,7 @@ public class bestPossibleTeleOP extends OpMode {
     // Utility classes
     Outtake outtake;
     Transfer transfer;
-
+    Intake d;
     // Smooth motor control accel
     private double intakeSpeed = 0;
     private double flySpeed = 0;
@@ -57,7 +68,9 @@ public class bestPossibleTeleOP extends OpMode {
 
         outtake = new Outtake(hardwareMap);
         transfer = new Transfer(hardwareMap);
+        d = new Intake(hardwareMap);
 
+        initAprilTag();
         RevHubOrientationOnRobot orientationOnRobot =
                 new RevHubOrientationOnRobot(
                         RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
@@ -73,8 +86,6 @@ public class bestPossibleTeleOP extends OpMode {
 
     @Override
     public void loop() {
-
-        // ---------- DRIVE CONTROL ----------
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
         double turn = gamepad1.right_stick_x;
@@ -84,26 +95,37 @@ public class bestPossibleTeleOP extends OpMode {
         backLeftDrive.setPower(y - x + turn);
         backRightDrive.setPower(y + x - turn);
 
-        // ---------- INTAKE CONTROL ----------
-        double targetIntake = gamepad2.left_stick_y;
-        if (Math.abs(targetIntake) < 0.05) targetIntake = 0.0;
-        intakeSpeed += Math.signum(targetIntake - intakeSpeed) * ACCEL;
-        intake.setPower(intakeSpeed);
-
         // ---------- FLYWHEEL CONTROL ----------
         double targetFly = gamepad2.right_stick_y;
         if (Math.abs(targetFly) < 0.05) targetFly = 0.0;
         flySpeed += Math.signum(targetFly - flySpeed) * ACCEL;
         fly.setPower(flySpeed);
 
-        // ---------- ROLLER CONTROL ----------
-        if (gamepad2.x) roler.setPower(1);
-        else if (gamepad2.y) roler.setPower(0);
+        telemetryAprilTag();
 
-        // ---------- TRANSFER CONTROL ----------
-        Transfer.updateServos(gamepad2.left_trigger, gamepad2.right_trigger);
+        //roller
+        if (gamepad2.x) {
+            roler.setPower(1);
+        }
+        else if (gamepad2.y) {
+            roler.setPower(0);
+        }
 
-        // ---------- SHOOTER SERVOS ----------
+        //transfer
+        if (gamepad2.left_trigger > 0.1) {
+            Transfer.fireGreen();
+        } else if (gamepad2.right_trigger > 0.1) {
+            Transfer.firePurple();
+        } else if (gamepad2.a) {
+            Transfer.reverseGreen();
+        } else if (gamepad2.b) {
+            Transfer.reversePurple();
+        } else {
+            Transfer.nothing();
+        }
+
+
+        //shooter servos
         if (gamepad2.right_bumper) {
             shooterLeft.setPosition(1.0);
             shooterRight.setPosition(0.0);
@@ -114,27 +136,12 @@ public class bestPossibleTeleOP extends OpMode {
         }
 
         // ---------- INDEXER AUTO COLOR DETECT ----------
-        int r = color.red();
-        int g = color.green();
-        int b = color.blue();
+        Intake.index();
 
-        float[] hsv = new float[3];
-        android.graphics.Color.RGBToHSV(r, g, b, hsv);
-        float hue = hsv[0];
-
-        // Debug telemetry for color sensor
-        telemetry.addData("Red", r);
-        telemetry.addData("Green", g);
-        telemetry.addData("Blue", b);
-        telemetry.addData("Hue", hue);
-
-        if (hue >= 150 && hue <= 165) {
-            pushServo.setPosition(0.2); // green
-        } else if (hue >= 210 && hue <= 230) {
-            pushServo.setPosition(0.8); // purple
-        } else {
-            pushServo.setPosition(0.5); // neutral
-        }
+        double targetIntake = gamepad2.left_stick_y;
+        if (Math.abs(targetIntake) < 0.05) targetIntake = 0.0;
+        intakeSpeed += Math.signum(targetIntake - intakeSpeed) * ACCEL;
+        intake.setPower(intakeSpeed);
 
         // ---------- FLYWHEEL SPEED TELEMETRY ----------
         int currentPos = fly.getCurrentPosition();
@@ -149,11 +156,33 @@ public class bestPossibleTeleOP extends OpMode {
         lastPosition = currentPos;
         lastTime = currentTime;
 
-        telemetry.addData("Fly Speed (RPM)", (int) RPM);
-        telemetry.addData("Fly Power", fly.getPower());
-        telemetry.addData("Intake Power", intake.getPower());
-        telemetry.addData("Roller Power", roler.getPower());
-        telemetry.addLine("TeleOp Running 🚀");
-        telemetry.update();
+    }
+    private void initAprilTag() {
+        aprilTag = AprilTagProcessor.easyCreateWithDefaults();
+        if (USE_WEBCAM) {
+            visionPortal = VisionPortal.easyCreateWithDefaults(
+                    hardwareMap.get(WebcamName.class, "Webcam 1"), aprilTag);
+        } else {
+            visionPortal = VisionPortal.easyCreateWithDefaults(
+                    BuiltinCameraDirection.BACK, aprilTag);
+        }
+    }
+    private void telemetryAprilTag() {
+        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.metadata != null) {
+                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
+                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
+            } else {
+                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
+                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+            }
+        }
+        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+        telemetry.addLine("RBE = Range, Bearing & Elevation");
     }
 }
