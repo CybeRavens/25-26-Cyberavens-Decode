@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad2;
-
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -47,5 +45,13 @@ public class Transfer {
     }
 
     // Update servos based on triggers
+    public static void updateServos(float leftTrigger, float rightTrigger) {
+        // Green servo controlled by left trigger
+        if (leftTrigger > 0.1) fireGreen();
+        else stopGreen();
 
+        // Purple servo controlled by right trigger
+        if (rightTrigger > 0.1) firePurple();
+        else stopPurple();
+    }
 }

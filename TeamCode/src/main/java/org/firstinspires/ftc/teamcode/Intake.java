@@ -28,4 +28,21 @@ public class Intake {
     public static void stop() {
         intakeMotor.setPower(0);
     }
+    public static void index() {
+        int r = color.red();
+        int g = color.green();
+        int b = color.blue();
+
+        float[] hsv = new float[3];
+        android.graphics.Color.RGBToHSV(r, g, b, hsv);
+        float hue = hsv[0];
+
+        if (hue >= 150 && hue <= 165) {
+            pushServo.setPosition(0.65); // green 0.6 works
+        } else if (hue >= 210 && hue <= 230) {
+            pushServo.setPosition(0.35); // purple 0.4 works
+        } else {
+            pushServo.setPosition(0.5); // neutral
+        }
+    }
 }
