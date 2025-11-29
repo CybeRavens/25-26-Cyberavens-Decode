@@ -29,18 +29,21 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.List;
 
 @Autonomous(name = "Rad Rupali's path", group = "Autonomous")
-@Configurable // Panels
+@Configurable
 public class rickyMomTest extends OpMode {
 
     private static final boolean USE_WEBCAM = true;
     private AprilTagProcessor aprilTag;
     private VisionPortal visionPortal;
-    private TelemetryManager panelsTelemetry; // Panels Telemetry instance
-    public Follower follower; // Pedro Pathing follower instance
-    private int pathState; // Current autonomous path state (state machine)
-    private Paths paths; // Paths defined in the Paths class
-    int aprilTagID;
-    DcMotor roler;
+    private TelemetryManager panelsTelemetry;
+    public Follower follower;
+    private int pathState;
+    private Paths paths;
+    private int aprilTagID = -1;  // default: no tag id
+    private DcMotor roler, fly;
+
+    // 🚀 Make Transfer global so shooterLogic can access it
+    private Transfer transfer;
 
     @Override
     public void init() {
@@ -48,74 +51,60 @@ public class rickyMomTest extends OpMode {
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose(72, 8, Math.toRadians(90)));
+
         Intake intake = new Intake(hardwareMap);
         Outtake outtake = new Outtake(hardwareMap);
-        Transfer transfer = new Transfer(hardwareMap);
-        paths = new Paths(follower); // Build paths
-        roler  = hardwareMap.get(DcMotor.class, "roler");
+        transfer = new Transfer(hardwareMap);
+
+        roler = hardwareMap.get(DcMotor.class, "roler");
+        fly = hardwareMap.get(DcMotor.class, "fly");
+        paths = new Paths(follower);
+        initAprilTag();
+
         panelsTelemetry.debug("Status", "Initialized");
         panelsTelemetry.update(telemetry);
-        initAprilTag();
     }
 
     @Override
     public void loop() {
-        follower.update(); // Update Pedro Pathing
-        pathState = autonomousPathUpdate(); // Update autonomous state machine
+        follower.update();
+        pathState = autonomousPathUpdate();
         Intake.index();
 
-        // Log values to Panels and Driver Station
+        fly.setPower(-0.7);
+
         panelsTelemetry.debug("Path State", pathState);
         panelsTelemetry.debug("X", follower.getPose().getX());
         panelsTelemetry.debug("Y", follower.getPose().getY());
         panelsTelemetry.debug("Heading", follower.getPose().getHeading());
         panelsTelemetry.update(telemetry);
-
     }
 
     public static class Paths {
-
-        public PathChain Path1;
-        public PathChain Path2;
-        public PathChain Path3;
-        public PathChain Path4;
+        public PathChain Path1, Path2, Path3;
 
         public Paths(Follower follower) {
             Path1 = follower
                     .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(71.697, 7.579), new Pose(72.000, 43.655))
-                    )
+                    .addPath(new BezierLine(new Pose(71.697, 7.579), new Pose(72.000, 43.655)))
                     .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(90))
                     .build();
 
             Path2 = follower
                     .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(72.000, 43.655), new Pose(50.779, 98.072))
-                    )
+                    .addPath(new BezierLine(new Pose(72.000, 43.655), new Pose(50.779, 98.072)))
                     .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(135))
                     .build();
 
             Path3 = follower
                     .pathBuilder()
-                    .addPath(
-                            new BezierCurve(
-                                    new Pose(50.779, 98.072),
-                                    new Pose(67.604, 82.762),
-                                    new Pose(33.347, 83.823)
-                            )
-                    )
+                    .addPath(new BezierCurve(
+                            new Pose(50.779, 98.072),
+                            new Pose(67.604, 82.762),
+                            new Pose(33.347, 83.823)
+                    ))
                     .setLinearHeadingInterpolation(Math.toRadians(135), Math.toRadians(180))
                     .build();
-
-//            Path4 = follower
-//                    .pathBuilder()
-//                    .addPath(
-//                            new BezierLine(new Pose(23, 83.823), new Pose(19.402, 83.823))
-//                    )
-//                    .setTangentHeadingInterpolation()
-//                    .build();
         }
     }
 
@@ -128,28 +117,27 @@ public class rickyMomTest extends OpMode {
 
             case 1:
                 if (!follower.isBusy()) {
-                    //scan apriltag
+                    // Scan AprilTag for 3 seconds
                     ElapsedTime timer = new ElapsedTime();
                     timer.reset();
-
                     while (timer.seconds() < 3.0) {
                         telemetryAprilTag();
-
                         telemetry.update();
                     }
-
                     pathState++;
                 }
+                break;
+
             case 2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path2, true);
                     pathState++;
                 }
                 break;
+
             case 3:
                 if (!follower.isBusy()) {
-                    //shoot
-                    sleep(1000);
+                    shooterLogic(aprilTagID);  // 🔥 Shoot based on detected AprilTag
                     pathState++;
                 }
                 break;
@@ -160,46 +148,60 @@ public class rickyMomTest extends OpMode {
                     roler.setPower(0.7);
                     pathState++;
                 }
+                break;
 
             case 5:
-                // Start Path3
                 if (!follower.isBusy()) {
                     follower.followPath(paths.Path3, true);
-                    pathState ++;
+                    pathState++;
                 }
                 break;
 
-//            case 6:
-//                // Run WHILE Path3 is driving
-//                if (follower.isBusy()) {
-//                    Intake.index();     // <-- runs EVERY LOOP while the path is active
-//                } else {
-//                    pathState = 7;      // only advance AFTER path ends
-//                }
-//                break;
             case 6:
                 if (!follower.isBusy()) {
-                   // stop intake
                     sleep(1000);
                     Intake.stop();
                     roler.setPower(0);
                     telemetry.addLine("done");
                     telemetry.update();
-                    pathState ++;
+                    pathState++;
                 }
-//            case 3:
-//                if (!follower.isBusy()) {
-//                    follower.followPath(paths.Path4, true);
-//                    pathState++;
-//                }
-//                break;
-
+                break;
         }
-        // Add your state machine Here
-        // Access paths with paths.pathName
-        // Refer to the Pedro Pathing Docs (Auto Example) for an example state machine
         return pathState;
     }
+
+    // 🎯 SHOOTER LOGIC HERE
+    public void shooterLogic(int id) {
+        if (id == 21) {
+            transfer.updateServos(0,1);
+            sleep(5000);
+            transfer.updateServos(1,0);
+            sleep(5000);
+            transfer.updateServos(1,0);
+            sleep(5000);
+
+        } else if (id == 22) {
+            transfer.updateServos(1,0);
+            sleep(5000);
+            transfer.updateServos(0,1);
+            sleep(5000);
+            transfer.updateServos(1,0);
+            sleep(5000);
+
+        } else if (id == 23) {
+            transfer.updateServos(0,1);
+            sleep(5000);
+            transfer.updateServos(0,1);
+            sleep(5000);
+            transfer.updateServos(1,0);
+            sleep(5000);
+        } else {
+            telemetry.addLine("No AprilTag detected → Default shooting");
+            telemetry.update();
+        }
+    }
+
     private void initAprilTag() {
         aprilTag = AprilTagProcessor.easyCreateWithDefaults();
         if (USE_WEBCAM) {
@@ -213,22 +215,11 @@ public class rickyMomTest extends OpMode {
 
     private void telemetryAprilTag() {
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        telemetry.addData("# AprilTags Detected", currentDetections.size());
-        for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
-                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)", detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z));
-                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)", detection.ftcPose.pitch, detection.ftcPose.roll, detection.ftcPose.yaw));
-                telemetry.addLine(String.format("RBE %6.1f %6.1f %6.1f  (inch, deg, deg)", detection.ftcPose.range, detection.ftcPose.bearing, detection.ftcPose.elevation));
-                aprilTagID = detection.id;
-            } else {
-                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
-            }
-        }
-        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
-        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
-        telemetry.addLine("RBE = Range, Bearing & Elevation");
-    }
+        telemetry.addData("# Tags Detected", currentDetections.size());
 
+        for (AprilTagDetection detection : currentDetections) {
+            telemetry.addData("ID", detection.id);
+            aprilTagID = detection.id;  // 💾 Store ID for auto shoot
+        }
+    }
 }
