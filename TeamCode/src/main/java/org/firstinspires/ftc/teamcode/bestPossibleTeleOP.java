@@ -92,7 +92,7 @@ public class bestPossibleTeleOP extends OpMode {
         // ---------- DRIVE CONTROL ----------
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
-        double turn = gamepad1.right_stick_x;
+        double turn = gamepad1.right_stick_x / 2;
 
         frontLeftDrive.setPower(y + x + turn);
         frontRightDrive.setPower(y - x - turn);
@@ -164,6 +164,9 @@ public class bestPossibleTeleOP extends OpMode {
         lastPosition = currentPos;
         lastTime = currentTime;
 
+        if (gamepad1.a) {
+            Outtake.autoAimingAnglearseAzul();
+        }
         telemetry.addData("Fly Speed (RPM)", (int) RPM);
         telemetry.addData("Fly Power", fly.getPower());
         telemetry.addData("Intake Power", intake.getPower());
