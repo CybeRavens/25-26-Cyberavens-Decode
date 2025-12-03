@@ -38,11 +38,11 @@ public class Intake {
         float hue = hsv[0];
 
         if (hue >= 150 && hue <= 165) {
-            pushServo.setPosition(0.65); // green 0.6 works
+            pushServo.setPosition(0.5); // green 0.6 works
         } else if (hue >= 210 && hue <= 230) {
-            pushServo.setPosition(0.35); // purple 0.4 works
+            pushServo.setPosition(0.4); // purple 0.4 works
         } else {
-            pushServo.setPosition(0.5); // neutral
+            pushServo.setPosition(0.45); // neutral
         }
     }
 }

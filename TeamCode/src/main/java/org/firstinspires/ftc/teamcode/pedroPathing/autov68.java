@@ -33,9 +33,9 @@ import java.util.List;
 
 import java.util.List;
 
-@Autonomous(name = "Blue Far Side", group = "Autonomous")
+@Autonomous(name = "Blue Close Side", group = "Autonomous")
 @Configurable // Panels
-public class autov67 extends OpMode {
+public class autov68 extends OpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
     public Follower follower; // Pedro Pathing follower instance
@@ -99,24 +99,26 @@ public class autov67 extends OpMode {
         public Paths(Follower follower) {
             Path1 = follower
                     .pathBuilder()
-                    .addPath(new BezierLine(new Pose(56.000, 8.500), new Pose(60.000, 8.500)))
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(80))
+                    .addPath(
+                            new BezierLine(new Pose(56.000, 135.500), new Pose(56.000, 98.000))
+                    )
+                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(75))
                     .build();
 
             Path2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(60.000, 8.500), new Pose(60.000, 10.000))
+                            new BezierLine(new Pose(56.000, 98.000), new Pose(56.000, 98.000))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(80), Math.toRadians(105))
+                    .setLinearHeadingInterpolation(Math.toRadians(75), Math.toRadians(135))
                     .build();
 
             Path3 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(60.000, 20.000), new Pose(59.088, 50.824))
+                            new BezierLine(new Pose(56.000, 98.000), new Pose(59.501, 55.369))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(105), Math.toRadians(90))
+                    .setTangentHeadingInterpolation()
                     .build();
         }
     }
@@ -210,8 +212,7 @@ public class autov67 extends OpMode {
             sleep(2000);
             transfer.fireGreen();
             sleep(5000);
-            roler.setPower(0);
-            Intake.stop();
+
 
 
         } else if (id == 23) {
