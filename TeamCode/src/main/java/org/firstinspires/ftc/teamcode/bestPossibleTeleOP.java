@@ -35,7 +35,7 @@ public class bestPossibleTeleOP extends OpMode {
     // Utility classes
     Outtake outtake;
     Transfer transfer;
-
+    FlywheelController control;
     // Smooth motor control accel
     private double intakeSpeed = 0;
     private double flySpeed = 0;
@@ -70,6 +70,7 @@ public class bestPossibleTeleOP extends OpMode {
 
         outtake = new Outtake(hardwareMap);
         transfer = new Transfer(hardwareMap);
+        control = new FlywheelController(hardwareMap, gamepad2, telemetry);
 
         RevHubOrientationOnRobot orientationOnRobot =
                 new RevHubOrientationOnRobot(
@@ -105,11 +106,12 @@ public class bestPossibleTeleOP extends OpMode {
         intakeSpeed += Math.signum(targetIntake - intakeSpeed) * ACCEL;
         intake.setPower(intakeSpeed);
         // ---------- FLYWHEEL CONTROL ----------
-        double targetFly = gamepad2.right_stick_y;
-        if (Math.abs(targetFly) < 0.05) targetFly = 0.0;
-        flySpeed += Math.signum(targetFly - flySpeed) * ACCEL;
-        fly.setPower(flySpeed);
+//        double targetFly = gamepad2.right_stick_y;
+//        if (Math.abs(targetFly) < 0.05) targetFly = 0.0;
+//        flySpeed += Math.signum(targetFly - flySpeed) * ACCEL;
+//        fly.setPower(flySpeed);
 
+        control.update();
         // ---------- ROLLER CONTROL ----------
         if (gamepad2.x) roler.setPower(1);
         else if (gamepad2.a) roler.setPower(-1);

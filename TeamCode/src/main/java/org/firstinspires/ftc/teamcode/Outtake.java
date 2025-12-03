@@ -26,7 +26,7 @@ public class Outtake {
 
         follower = Constants.createFollower(hardwareMap);
 
-        follower.setStartingPose(new Pose(0, 0, Math.toRadians(90)));
+        //follower.setStartingPose(new Pose(0, 0, Math.toRadians(90)));
 
 
     }
