@@ -70,7 +70,7 @@ public class bestPossibleTeleOP extends OpMode {
 
         outtake = new Outtake(hardwareMap);
         transfer = new Transfer(hardwareMap);
-        control = new FlywheelController(hardwareMap, gamepad2, telemetry);
+        control = new FlywheelController(hardwareMap, gamepad2);
 
         RevHubOrientationOnRobot orientationOnRobot =
                 new RevHubOrientationOnRobot(
@@ -93,7 +93,7 @@ public class bestPossibleTeleOP extends OpMode {
         // ---------- DRIVE CONTROL ----------
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
-        double turn = gamepad1.right_stick_x / 2;
+        double turn = gamepad1.right_stick_x / 4;
 
         frontLeftDrive.setPower(y + x + turn);
         frontRightDrive.setPower(y - x - turn);
@@ -101,10 +101,11 @@ public class bestPossibleTeleOP extends OpMode {
         backRightDrive.setPower(y + x - turn);
 
         // ---------- INTAKE CONTROL ----------
-        double targetIntake = gamepad2.left_stick_y;
-        if (Math.abs(targetIntake) < 0.05) targetIntake = 0.0;
-        intakeSpeed += Math.signum(targetIntake - intakeSpeed) * ACCEL;
-        intake.setPower(intakeSpeed);
+        if (gamepad2.left_stick_y < 0.1 ) {
+            intake.setPower(gamepad2.left_stick_y);
+        } else if (gamepad2.left_stick_y > 0.1 ) {
+            intake.setPower(gamepad2.left_stick_y);
+        }
         // ---------- FLYWHEEL CONTROL ----------
 //        double targetFly = gamepad2.right_stick_y;
 //        if (Math.abs(targetFly) < 0.05) targetFly = 0.0;
@@ -112,9 +113,13 @@ public class bestPossibleTeleOP extends OpMode {
 //        fly.setPower(flySpeed);
 
         control.update();
+        telemetry.addData("Fly Target RPM", control.getTargetRPM());
+        telemetry.addData("Fly Current RPM", (int) control.getCurrentRPM());
+        telemetry.addData("Fly Current Power", (int) control.getPower());
+
         // ---------- ROLLER CONTROL ----------
-        if (gamepad2.x) roler.setPower(1);
-        else if (gamepad2.a) roler.setPower(-1);
+        if (gamepad2.x) roler.setPower(0.7);
+        else if (gamepad2.a) roler.setPower(-0.7);
         else if (gamepad2.y) roler.setPower(0);
 
         // ---------- TRANSFER CONTROL ----------

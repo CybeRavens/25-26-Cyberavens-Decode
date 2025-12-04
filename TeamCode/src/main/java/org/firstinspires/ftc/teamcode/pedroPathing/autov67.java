@@ -83,7 +83,7 @@ public class autov67 extends OpMode {
         panelsTelemetry.update(telemetry);
 
 
-        Intake.index();
+        //Intake.index();
         fly.setPower(-0.9);
         //roler.setPower(0.5);
         Intake.run(-0.3);
@@ -108,7 +108,7 @@ public class autov67 extends OpMode {
                     .addPath(
                             new BezierLine(new Pose(60.000, 8.500), new Pose(60.000, 10.000))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(80), Math.toRadians(105))
+                    .setLinearHeadingInterpolation(Math.toRadians(80), Math.toRadians(107))
                     .build();
 
             Path3 = follower
@@ -116,7 +116,7 @@ public class autov67 extends OpMode {
                     .addPath(
                             new BezierLine(new Pose(60.000, 20.000), new Pose(59.088, 50.824))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(105), Math.toRadians(90))
+                    .setLinearHeadingInterpolation(Math.toRadians(107), Math.toRadians(90))
                     .build();
         }
     }
@@ -152,6 +152,8 @@ public class autov67 extends OpMode {
                     shooterLogic(aprilTagID);
                     sleep(3000);
                     Transfer.nothing();
+                    Intake.stop();
+                    fly.setPower(0);
                     pathState++;
                 }
                 break;
@@ -204,10 +206,11 @@ public class autov67 extends OpMode {
         } else if (id == 22) {
             transfer.fireGreen();
             sleep(2500);
-            roler.setPower(1.0);
-            Intake.run(-1);
+            transfer.nothing();
             transfer.firePurple();
             sleep(2000);
+            roler.setPower(1.0);
+            Intake.run(-1);
             transfer.fireGreen();
             sleep(5000);
             roler.setPower(0);
@@ -218,10 +221,11 @@ public class autov67 extends OpMode {
             transfer.fireGreen();
             sleep(2000);
             roler.setPower(1.0);
+            transfer.nothing();
             Intake.run(-1);
             sleep(3000);
             transfer.fireGreen();
-            sleep(2000);
+            sleep(4000);
             transfer.firePurple();
             sleep(5000);
             roler.setPower(0);

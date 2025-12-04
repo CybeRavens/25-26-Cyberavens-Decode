@@ -55,7 +55,7 @@ public class autov68 extends OpMode {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(64.724, 9.398, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(56.000, 135.500, Math.toRadians(90)));
 
         paths = new Paths(follower); // Build paths
 
@@ -84,9 +84,9 @@ public class autov68 extends OpMode {
 
 
         Intake.index();
-        fly.setPower(-0.9);
+        fly.setPower(-0.75);
         //roler.setPower(0.5);
-        Intake.run(-0.3);
+        //Intake.run(-0.3);
 
     }
 
@@ -100,17 +100,17 @@ public class autov68 extends OpMode {
             Path1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(56.000, 135.500), new Pose(56.000, 98.000))
+                            new BezierLine(new Pose(56.000, 135.500), new Pose(56.000, 105))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(75))
+                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(78))
                     .build();
 
             Path2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(56.000, 98.000), new Pose(56.000, 98.000))
+                            new BezierLine(new Pose(56.000, 98.000), new Pose(56.000, 95))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(75), Math.toRadians(135))
+                    .setLinearHeadingInterpolation(Math.toRadians(78), Math.toRadians(135))
                     .build();
 
             Path3 = follower
@@ -205,24 +205,28 @@ public class autov68 extends OpMode {
 
         } else if (id == 22) {
             transfer.fireGreen();
-            sleep(2500);
+            sleep(3000);
+            transfer.nothing();
+            transfer.firePurple();
+            sleep(5000);
             roler.setPower(1.0);
             Intake.run(-1);
-            transfer.firePurple();
-            sleep(2000);
             transfer.fireGreen();
-            sleep(5000);
-
+            sleep(1500);
+            sleep(3000);
+            roler.setPower(0);
+            Intake.stop();
 
 
         } else if (id == 23) {
             transfer.fireGreen();
             sleep(2000);
             roler.setPower(1.0);
+            transfer.nothing();
             Intake.run(-1);
             sleep(3000);
             transfer.fireGreen();
-            sleep(2000);
+            sleep(4000);
             transfer.firePurple();
             sleep(5000);
             roler.setPower(0);

@@ -40,25 +40,29 @@ public class Outtake {
     }
 
     public static void autoAimingAnglearseAzul() {
+
         double xPos = pinpoint.getPosX(DistanceUnit.INCH);
         double yPos = pinpoint.getPosY(DistanceUnit.INCH);
-        double heading = pinpoint.getHeading(AngleUnit.DEGREES);
-        double goalX = -32;
+        double headingDeg = pinpoint.getHeading(AngleUnit.DEGREES);
+
+        double goalX = 32;
         double goalY = 110;
 
-        double turnAngle = Math.atan2((goalX - xPos), (goalY-yPos));
-        PathChain Path1;
+        double dx = goalX - xPos;
+        double dy = goalY - yPos;
+        double targetAngleRad = Math.atan2(dy, dx);
 
-        Path1 = follower
+        double headingRad = Math.toRadians(headingDeg);
+
+        PathChain path1 = follower
                 .pathBuilder()
                 .addPath(
-                        new BezierLine(new Pose(xPos, yPos), new Pose(xPos, yPos))
+                        new BezierLine(new Pose(xPos, yPos), new Pose(xPos + 10, yPos))
                 )
-                .setLinearHeadingInterpolation(Math.toRadians(heading), Math.toRadians(turnAngle))
+                .setLinearHeadingInterpolation(headingRad, targetAngleRad)
                 .build();
 
-        follower.followPath(Path1, false);
-
+        follower.followPath(path1, false);
         follower.update();
     }
 }
