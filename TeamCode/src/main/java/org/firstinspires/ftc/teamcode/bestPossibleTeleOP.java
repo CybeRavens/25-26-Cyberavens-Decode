@@ -99,12 +99,13 @@ public class bestPossibleTeleOP extends OpMode {
         // ---------- DRIVE CONTROL ----------
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
-        double turn = gamepad1.right_stick_x / 4;
+        double turn = gamepad1.right_stick_x / 3.5;
 
         frontLeftDrive.setPower(y + x + turn);
-        frontRightDrive.setPower(y - x - turn);
+        frontRightDrive.setPower(y - (x * 0.9999) - turn);
         backLeftDrive.setPower(y - x + turn);
-        backRightDrive.setPower(y + x - turn);
+        backRightDrive.setPower(y + (x * 0.9999) - turn);
+
 
         // ---------- INTAKE CONTROL ----------
         if (gamepad2.left_stick_y < 0.1 ) {
