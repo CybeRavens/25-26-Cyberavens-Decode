@@ -12,6 +12,7 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.paths.PathConstraints;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -44,6 +45,7 @@ public class rickyMomTest extends OpMode {
     private Paths paths;
     private int aprilTagID = -1;  // default: no tag id
     private DcMotor roler, fly;
+    private RevColorSensorV3 color;
 
     // 🚀 Make Transfer global so shooterLogic can access it
     private Transfer transfer;
@@ -63,6 +65,7 @@ public class rickyMomTest extends OpMode {
         fly = hardwareMap.get(DcMotor.class, "fly");
         paths = new Paths(follower);
         initAprilTag();
+        color = hardwareMap.get(RevColorSensorV3.class, "color");
 
         panelsTelemetry.debug("Status", "Initialized");
         panelsTelemetry.update(telemetry);

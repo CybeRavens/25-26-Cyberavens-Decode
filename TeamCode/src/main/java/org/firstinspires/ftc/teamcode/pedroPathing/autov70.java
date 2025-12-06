@@ -12,7 +12,6 @@ import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.paths.PathConstraints;
-import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -28,16 +27,15 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.List;
 
 import java.util.List;
 
-@Autonomous(name = "Blue Far Side", group = "Autonomous")
+@Autonomous(name = "Red Close Side", group = "Autonomous")
 @Configurable // Panels
-public class autov67 extends OpMode {
+public class autov70 extends OpMode {
 
     private TelemetryManager panelsTelemetry; // Panels Telemetry instance
     public Follower follower; // Pedro Pathing follower instance
@@ -52,25 +50,21 @@ public class autov67 extends OpMode {
     private Transfer transfer;
     private Intake intake;
     private Outtake outtake;
-    private RevColorSensorV3 color;
-    Servo pushServo;
-
     @Override
     public void init() {
         panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(64.724, 9.398, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(144-56.000, 135.500, Math.toRadians(90)));
 
         paths = new Paths(follower); // Build paths
-        pushServo = hardwareMap.get(Servo.class, "pushServo");
+
         panelsTelemetry.debug("Status", "Initialized");
         panelsTelemetry.update(telemetry);
         transfer = new Transfer(hardwareMap);
         intake = new Intake(hardwareMap);
         fly = hardwareMap.get(DcMotor.class, "fly");
         roler = hardwareMap.get(DcMotor.class, "roler");
-        color = hardwareMap.get(RevColorSensorV3.class, "color");
 
 
         initAprilTag();
@@ -89,30 +83,10 @@ public class autov67 extends OpMode {
         panelsTelemetry.update(telemetry);
 
 
-        int r = color.red();
-        int g = color.green();
-        int b = color.blue();
-
-        float[] hsv = new float[3];
-        android.graphics.Color.RGBToHSV(r, g, b, hsv);
-        float hue = hsv[0];
-
-        // Debug telemetry for color sensor
-        telemetry.addData("Red", r);
-        telemetry.addData("Green", g);
-        telemetry.addData("Blue", b);
-        telemetry.addData("Hue", hue);
-
-        if (hue >= 150 && hue <= 165) {
-            pushServo.setPosition(0.7); // green 0.6 works
-        } else if (hue >= 210 && hue <= 230) {
-            pushServo.setPosition(0.3); // purple 0.4 works
-        } else {
-            pushServo.setPosition(0.5); // neutral
-        }
-
-        fly.setPower(-0.9);
+        Intake.index();
+        fly.setPower(-0.7);
         //roler.setPower(0.5);
+        //Intake.run(-0.3);
 
     }
 
@@ -121,47 +95,30 @@ public class autov67 extends OpMode {
         public PathChain Path1;
         public PathChain Path2;
         public PathChain Path3;
-        public PathChain Path4;
-        public PathChain Path5;
 
         public Paths(Follower follower) {
             Path1 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(56.000, 8.500), new Pose(60.000, 8.500))
+                            new BezierLine(new Pose(144-56.000, 135.500), new Pose(144-56.000, 105))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(80))
+                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180-78))
                     .build();
 
             Path2 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(60.000, 8.500), new Pose(60.000, 10.000))
+                            new BezierLine(new Pose(144-56.000, 98.000), new Pose(144-56.000, 95))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(80), Math.toRadians(107))
+                    .setLinearHeadingInterpolation(Math.toRadians(180-78), Math.toRadians(180-135))
                     .build();
 
             Path3 = follower
                     .pathBuilder()
                     .addPath(
-                            new BezierLine(new Pose(60.000, 10), new Pose(40, 39))
+                            new BezierLine(new Pose(144-56.000, 98.000), new Pose(144-59.501, 55.369))
                     )
-                    .setLinearHeadingInterpolation(Math.toRadians(107), Math.toRadians(180))
-                    .build();
-            Path4 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(40, 39), new Pose(30, 39))
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
-                    .build();
-
-            Path5 = follower
-                    .pathBuilder()
-                    .addPath(
-                            new BezierLine(new Pose(30, 39), new Pose(59, 18))
-                    )
-                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(115))
+                    .setTangentHeadingInterpolation()
                     .build();
         }
     }
@@ -169,7 +126,6 @@ public class autov67 extends OpMode {
     public int autonomousPathUpdate() {
         switch (pathState) {
             case 0:
-                Intake.run(-0.3);
                 follower.followPath(paths.Path1, true);
                 pathState++;
                 break;
@@ -178,7 +134,7 @@ public class autov67 extends OpMode {
                 if (!follower.isBusy()) {
                     ElapsedTime timer = new ElapsedTime();
                     timer.reset();
-                    while (timer.seconds() < 2.5) {
+                    while (timer.seconds() < 3.0) {
                         telemetryAprilTag();
                         telemetry.update();
                     }
@@ -196,44 +152,16 @@ public class autov67 extends OpMode {
             case 3:
                 if (!follower.isBusy()) {
                     shooterLogic(aprilTagID);
-                    sleep(1000);
+                    sleep(3000);
                     Transfer.nothing();
                     pathState++;
                 }
                 break;
             case 4:
                 if (!follower.isBusy()) {
-                    follower.setMaxPower(0.7);
                     follower.followPath(paths.Path3, true);
                     pathState++;
                 }
-            case 5:
-                if (!follower.isBusy()) {
-                    follower.setMaxPower(0.4);
-                    Intake.run(-1);
-                    roler.setPower(1);
-                    follower.followPath(paths.Path4, true);
-                    pathState++;
-                }
-            case 6:
-                if (!follower.isBusy()) {
-                    sleep(1000);
-                    follower.setMaxPower(1);
-                    follower.followPath(paths.Path5, true);
-                    pathState++;
-                }
-                break;
-
-            case 7:
-                if (!follower.isBusy()) {
-                    transfer.firePurple();
-                    sleep(3500);
-                    transfer.fireGreen();
-                    sleep(3500);
-                    Transfer.nothing();
-                    pathState++;
-                }
-                break;
         }
         return pathState;
     }
@@ -262,35 +190,35 @@ public class autov67 extends OpMode {
     public void shooterLogic(int id) {
         //fly.setPower(-0.7);
         if (id == 21) {
-            sleep(2000);
             transfer.firePurple();
-            sleep(2000);
+            sleep(4000);
             roler.setPower(1);
             Intake.run(-1);
             transfer.fireGreen();
             sleep(2000);
-            //transfer.nothing();
+            transfer.nothing();
             sleep(2000);
             transfer.fireGreen();
-            sleep(1000);
+            sleep(5000);
+            Intake.stop();
             roler.setPower(0);
 
         } else if (id == 22) {
-            sleep(2000);
             transfer.fireGreen();
-            sleep(2500);
+            sleep(3000);
             transfer.nothing();
             transfer.firePurple();
-            sleep(2000);
+            sleep(5000);
             roler.setPower(1.0);
             Intake.run(-1);
             transfer.fireGreen();
-            sleep(1000);
+            sleep(1500);
+            sleep(3000);
             roler.setPower(0);
+            Intake.stop();
 
 
         } else if (id == 23) {
-            sleep(2000);
             transfer.fireGreen();
             sleep(2000);
             roler.setPower(1.0);
@@ -298,10 +226,11 @@ public class autov67 extends OpMode {
             Intake.run(-1);
             sleep(3000);
             transfer.fireGreen();
-            sleep(2000);
+            sleep(4000);
             transfer.firePurple();
-            sleep(1000);
+            sleep(5000);
             roler.setPower(0);
+            Intake.stop();
         } else {
             sleep(2000);
             transfer.firePurple();
@@ -311,9 +240,8 @@ public class autov67 extends OpMode {
             transfer.fireGreen();
             sleep(2000);
             transfer.nothing();
-            sleep(1000);
+            sleep(2000);
             transfer.fireGreen();
-            roler.setPower(0);
         }
     }
 }

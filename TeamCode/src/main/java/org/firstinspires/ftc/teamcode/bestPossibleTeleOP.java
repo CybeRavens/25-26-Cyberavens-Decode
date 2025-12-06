@@ -31,7 +31,7 @@ public class bestPossibleTeleOP extends OpMode {
     private Servo pushServo, shooterLeft, shooterRight;
     private RevColorSensorV3 color;
     private IMU imu;
-
+    Servo padLeft, padRight;
     // Utility classes
     Outtake outtake;
     Transfer transfer;
@@ -53,7 +53,8 @@ public class bestPossibleTeleOP extends OpMode {
         frontRightDrive = hardwareMap.get(DcMotor.class, "rf");
         backLeftDrive   = hardwareMap.get(DcMotor.class, "lr");
         backRightDrive  = hardwareMap.get(DcMotor.class, "rr");
-
+        padLeft = hardwareMap.get(Servo.class, "padLeft");
+        padRight = hardwareMap.get(Servo.class, "padRight");
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
 
@@ -90,6 +91,9 @@ public class bestPossibleTeleOP extends OpMode {
     @Override
     public void loop() {
         telemetryAprilTag();
+
+        padRight.setPosition(0);
+        padLeft.setPosition(0);
         // ---------- DRIVE CONTROL ----------
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
