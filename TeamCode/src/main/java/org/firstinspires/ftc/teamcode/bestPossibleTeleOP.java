@@ -46,6 +46,8 @@ public class bestPossibleTeleOP extends OpMode {
     private long lastTime = 0;
     int aprilTagID = 21;
 
+    boolean useIndex = true;
+
     @Override
     public void init() {
         // DRIVE MOTORS
@@ -153,15 +155,22 @@ public class bestPossibleTeleOP extends OpMode {
         telemetry.addData("Green", g);
         telemetry.addData("Blue", b);
         telemetry.addData("Hue", hue);
-
-        if (hue >= 150 && hue <= 165) {
-            pushServo.setPosition(0.65); // green 0.6 works
-        } else if (hue >= 210 && hue <= 230) {
-            pushServo.setPosition(0.35); // purple 0.4 works
-        } else {
-            pushServo.setPosition(0.5); // neutral
+        if (gamepad2.left_stick_button) {
+            useIndex = !useIndex;
+            gamepad2.rumble(100);
         }
-
+        if (useIndex) {
+            if (hue >= 150 && hue <= 165) {
+                pushServo.setPosition(0.65); // green 0.6 works
+            } else if (hue >= 210 && hue <= 230) {
+                pushServo.setPosition(0.35); // purple 0.4 works
+            } else {
+                pushServo.setPosition(0.5); // neutral
+            }
+        }
+        else {
+            pushServo.setPosition(0);
+        }
         // ---------- FLYWHEEL SPEED TELEMETRY ----------
         int currentPos = fly.getCurrentPosition();
         long currentTime = System.nanoTime();
